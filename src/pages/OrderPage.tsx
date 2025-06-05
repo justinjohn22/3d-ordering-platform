@@ -1,6 +1,11 @@
 // src/pages/OrderPage.tsx
 
-import React, { useState, ChangeEvent, FormEvent } from 'react';
+import React, {
+    useState,
+    useEffect,
+    ChangeEvent,
+    FormEvent,
+} from 'react';
 import { Canvas, extend } from '@react-three/fiber';
 import {
     Mesh,
@@ -26,14 +31,15 @@ extend({
     DirectionalLight,
 });
 
-type WidthOption = 'Narrow' | 'Medium' | 'Wide';
-type ThicknessOption = 'Thin' | 'Thick';
-type ColourOption = 'Black' | 'Grey' | 'Blue' | 'Red';
-
+/**
+ * Our front‐end “shape” for an order.
+ * We’ve included all fields the backend expects.
+ */
 interface OrderData {
     firstName: string;
     lastName: string;
     email: string;
+    address: string;
     shoeType: string;
     shoeSize: string;
     lengthVal: number;
@@ -42,64 +48,144 @@ interface OrderData {
     colourVal: ColourOption;
 }
 
+type WidthOption = 'Narrow' | 'Medium' | 'Wide';
+type ThicknessOption = 'Thin' | 'Thick';
+type ColourOption = 'Black' | 'Grey' | 'Blue' | 'Red';
+
+// The base URL for our API must be provided via environment variable.
+const API_BASE = process.env.REACT_APP_API_URL;
+if (!API_BASE) {
+    throw new Error('REACT_APP_API_URL is not defined in .env');
+}
+
 const OrderPage: React.FC = () => {
+    // ──────────────────────────────────────────────────────────
     // 1. Form‐state
+    // ──────────────────────────────────────────────────────────
     const [firstName, setFirstName] = useState<string>('');
     const [lastName, setLastName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
+    const [address, setAddress] = useState<string>(''); // required by backend
     const [shoeType, setShoeType] = useState<string>('');
     const [shoeSize, setShoeSize] = useState<string>('');
 
-    // 2. Recent Submissions (typed as OrderData[])
-    const [recentSubmissions, setRecentSubmissions] = useState<OrderData[]>([]);
+    // ──────────────────────────────────────────────────────────
+    // 2. Orders fetched from backend
+    // ──────────────────────────────────────────────────────────
+    const [orders, setOrders] = useState<OrderData[]>([]);
 
+    // ──────────────────────────────────────────────────────────
     // 3. Orthotic options
+    // ──────────────────────────────────────────────────────────
     const [lengthVal, setLengthVal] = useState<number>(50);
     const [widthVal, setWidthVal] = useState<WidthOption>('Medium');
     const [thicknessVal, setThicknessVal] = useState<ThicknessOption>('Thin');
     const [colourVal, setColourVal] = useState<ColourOption>('Black');
 
-    // 4. Handle form submission
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        const orderData: OrderData = {
-            firstName,
-            lastName,
-            email,
-            shoeType,
-            shoeSize,
-            lengthVal,
-            widthVal,
-            thicknessVal,
-            colourVal,
-        };
-
-        console.log('Order placed:', orderData);
-        alert('Thank you, your order has been recorded!');
-
-        // Keep only the last 5 submissions
-        setRecentSubmissions((prev) => [orderData, ...prev].slice(0, 5));
-
-        // Reset form fields
-        setFirstName('');
-        setLastName('');
-        setEmail('');
-        setShoeType('');
-        setShoeSize('');
-        setLengthVal(50);
-        setWidthVal('Medium');
-        setThicknessVal('Thin');
-        setColourVal('Black');
+    // ──────────────────────────────────────────────────────────
+    // 4. Function to fetch all orders from the server
+    // ──────────────────────────────────────────────────────────
+    const getAllOrders = async () => {
+        try {
+            const res = await fetch(`${API_BASE}/orders`);
+            if (!res.ok) {
+                console.error('Failed to fetch orders:', res.statusText);
+                return;
+            }
+            const serverData: any[] = await res.json();
+            // Map each server‐side (snake_case) into our OrderData shape:
+            const mapped: OrderData[] = serverData.map((o) => ({
+                firstName: o.first_name,
+                lastName: o.last_name,
+                email: o.email,
+                address: o.address,
+                shoeType: o.shoe_type,
+                shoeSize: o.shoe_size,
+                lengthVal: o.shoe_length,
+                widthVal: o.shoe_width as WidthOption,
+                thicknessVal: o.shoe_thickness as ThicknessOption,
+                colourVal: o.shoe_colour as ColourOption,
+            }));
+            setOrders(mapped);
+        } catch (err) {
+            console.error('Error fetching orders:', err);
+        }
     };
 
-    // 5. Compute color mapping (we no longer use dimensions for a box—only color)
+    // ──────────────────────────────────────────────────────────
+    // 5. On mount, load all orders
+    // ──────────────────────────────────────────────────────────
+    useEffect(() => {
+        getAllOrders();
+    }, []);
+
+    // ──────────────────────────────────────────────────────────
+    // 6. Handle form submission → POST to backend, then refresh
+    // ──────────────────────────────────────────────────────────
+    const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+
+        const payload = {
+            // backend expects snake_case keys:
+            email: email,
+            first_name: firstName,
+            last_name: lastName,
+            address: address,
+            shoe_type: shoeType,
+            shoe_size: shoeSize,
+            shoe_length: lengthVal,
+            shoe_width: widthVal,
+            shoe_thickness: thicknessVal,
+            shoe_colour: colourVal,
+        };
+
+        try {
+            const res = await fetch(`${API_BASE}/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                const errJson = await res.json().catch(() => ({}));
+                console.error('Failed to create order:', res.status, errJson);
+                alert(
+                    `Error: ${errJson?.error || res.statusText || 'Unable to create order'
+                    }`
+                );
+                return;
+            }
+
+            // We don’t need to manually prepend. Instead, just re-fetch all orders:
+            await getAllOrders();
+
+            // Clear the form
+            setFirstName('');
+            setLastName('');
+            setEmail('');
+            setAddress('');
+            setShoeType('');
+            setShoeSize('');
+            setLengthVal(50);
+            setWidthVal('Medium');
+            setThicknessVal('Thin');
+            setColourVal('Black');
+
+            alert('Thank you, your order has been recorded!');
+        } catch (err) {
+            console.error('Error during POST /orders:', err);
+            alert('An unexpected error occurred. Please try again.');
+        }
+    };
+
+    // ──────────────────────────────────────────────────────────
+    // 7. Compute preview color (for 3D)
+    // ──────────────────────────────────────────────────────────
     const computePreviewParams = () => {
-        // Map colourVal → hex
         let colorHex = '#000000';
         if (colourVal === 'Grey') colorHex = '#777777';
         else if (colourVal === 'Blue') colorHex = '#1E90FF';
         else if (colourVal === 'Red') colorHex = '#DC143C';
-
         return { color: colorHex };
     };
 
@@ -150,6 +236,21 @@ const OrderPage: React.FC = () => {
                     />
                 </div>
 
+                {/* Address */}
+                <div>
+                    <label htmlFor="address">Address *</label>
+                    <input
+                        id="address"
+                        type="text"
+                        placeholder="Street, City, State"
+                        value={address}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                            setAddress(e.target.value)
+                        }
+                        required
+                    />
+                </div>
+
                 {/* Shoe Type */}
                 <div>
                     <label htmlFor="shoeType">Shoe Type</label>
@@ -178,7 +279,7 @@ const OrderPage: React.FC = () => {
                     />
                 </div>
 
-                {/* Length slider (0–100) */}
+                {/* Length slider */}
                 <div className="FullSpan">
                     <label htmlFor="lengthVal">
                         Length:{' '}
@@ -259,206 +360,101 @@ const OrderPage: React.FC = () => {
             </form>
 
             {/* ──────────────────────────────────────────────────────────── */}
-            {/*   Live 3D Insole Preview (Canvas now renders 4 objects)   */}
+            {/*   Live 3D Insole Preview (Canvas)   */}
             {/* ──────────────────────────────────────────────────────────── */}
             <div className="Visualization">
                 <h3>Live 3D Insole Preview</h3>
-
-                {/* DEBUG: .InsoleCanvasContainer is forced to 400px tall */}
                 <div className="InsoleCanvasContainer debug-visible">
                     <div className="canvas-container">
                         <Canvas camera={{ position: [0, 0, 5] }}>
-                            {/* Lights to illuminate the MeshStandardMaterial */}
                             <ambientLight intensity={0.5} />
                             <directionalLight position={[2, 2, 5]} intensity={1} />
                             <OrbitControls enableZoom={true} />
 
                             {(() => {
                                 const { color } = computePreviewParams();
+                                const t = lengthVal / 100;
+                                const widthFactor = widthVal === 'Narrow' ? 0.7 : widthVal === 'Medium' ? 0.85 : 1.0;
+                                const thicknessFactor = thicknessVal === 'Thin' ? 0.5 : 1.0;
 
-                                const t = lengthVal / 100; // Interpolation factor 0→1
+                                // Cylinder 1 transforms
+                                const cyl1PosX = -1.1 + t * (-1.54 + 1.1);
+                                const cyl1ScaleX = 0.691 + t * (1.0 - 0.691);
+                                const cyl1ScaleY = -0.13 * thicknessFactor;
+                                const cyl1ScaleZ = 0.715 * widthFactor;
 
-                                // Width-based Z-scale multiplier
-                                const widthFactor =
-                                    widthVal === 'Narrow'
-                                        ? 0.7
-                                        : widthVal === 'Medium'
-                                            ? 0.85
-                                            : 1.0;
-
-                                // Thickness-based Y-scale multiplier
-                                const thicknessFactor =
-                                    thicknessVal === 'Thin' ? 0.5 : 1.0;
-
-                                //
-                                // Cylinder 1 transforms:
-                                //   • Position X:   lerp(-1.10 → -1.540)
-                                //   • Rotation:     (0,0,0) always
-                                //   • Scale: X: lerp(0.691 → 1.0)
-                                //            Y: base -0.13 (halved if Thin)
-                                //            Z: 0.715 × widthFactor
-                                //
-                                const cyl1PosX =
-                                    -1.10 + t * (-1.540 + 1.10);
-                                const cyl1ScaleX =
-                                    0.691 + t * (1.0 - 0.691);
-                                const cyl1ScaleY =
-                                    -0.13 * thicknessFactor;
-                                const cyl1ScaleZ =
-                                    0.715 * widthFactor;
-
-                                //
-                                // Box 1 transforms:
-                                //   • Position X: -0.54 constant
-                                //   • Position Z: lerp(0.04 → 0)
-                                //   • Rotation Z: 4.96
-                                //   • Scale X: lerp(1.245 → 2.166)
-                                //     Scale Y: 0.090 (halved if Thin)
-                                //     Scale Z: 1.142 × widthFactor
-                                //
+                                // Box 1 transforms
                                 const box1PosX = -0.54;
-                                const box1PosZ =
-                                    0.04 + t * (0 - 0.04);
-                                const box1ScaleX =
-                                    1.245 + t * (2.166 - 1.245);
-                                const box1ScaleY =
-                                    0.090 * thicknessFactor;
-                                const box1ScaleZ =
-                                    1.142 * widthFactor;
+                                const box1PosZ = 0.04 + t * (0 - 0.04);
+                                const box1ScaleX = 1.245 + t * (2.166 - 1.245);
+                                const box1ScaleY = 0.09 * thicknessFactor;
+                                const box1ScaleZ = 1.142 * widthFactor;
                                 const box1RotZ = 25;
 
-                                //
-                                // Box 2 transforms:
-                                //   • Position X: 0.52 constant
-                                //   • Position Z: 0.04 constant
-                                //   • Rotation Z: -4.09
-                                //   • Scale X: lerp(1.241 → 2.166)
-                                //     Scale Y: 0.090 (halved if Thin)
-                                //     Scale Z: 1.142 × widthFactor
-                                //
+                                // Box 2 transforms
                                 const box2PosX = 0.52;
                                 const box2PosZ = 0.04;
-                                const box2ScaleX =
-                                    1.241 + t * (2.166 - 1.241);
-                                const box2ScaleY =
-                                    0.090 * thicknessFactor;
-                                const box2ScaleZ =
-                                    1.142 * widthFactor;
+                                const box2ScaleX = 1.241 + t * (2.166 - 1.241);
+                                const box2ScaleY = 0.09 * thicknessFactor;
+                                const box2ScaleZ = 1.142 * widthFactor;
                                 const box2RotZ = -25;
 
-                                //
-                                // Cylinder 2 transforms:
-                                //   • Position X: lerp(1.280 → 1.360)
-                                //   • Rotation:   (0,0,0) always
-                                //   • Scale X: lerp(0.943 → 1.566)
-                                //     Scale Y: -0.13 (halved if Thin)
-                                //     Scale Z: 0.935 × widthFactor
-                                //
-                                const cyl2PosX =
-                                    1.280 + t * (1.360 - 1.280);
-                                const cyl2ScaleX =
-                                    0.943 + t * (1.566 - 0.943);
-                                const cyl2ScaleY =
-                                    -0.13 * thicknessFactor;
-                                const cyl2ScaleZ =
-                                    0.935 * widthFactor;
+                                // Cylinder 2 transforms
+                                const cyl2PosX = 1.28 + t * (1.36 - 1.28);
+                                const cyl2ScaleX = 0.943 + t * (1.566 - 0.943);
+                                const cyl2ScaleY = -0.13 * thicknessFactor;
+                                const cyl2ScaleZ = 0.935 * widthFactor;
 
                                 return (
-                                    <group rotation={[Math.PI / 4, 0, 0]}>
+                                    <group
+                                        /* Rotate by 45° then shift X to approximately center */
+                                        rotation={[Math.PI / 4, 0, 0]}
+                                        position={[0, 1.5, 0]}
+                                    >
                                         {/* Cylinder 1 */}
                                         <mesh
-                                            position={[
-                                                cyl1PosX,
-                                                0,
-                                                0,
-                                            ]}
+                                            position={[cyl1PosX, 0, 0]}
                                             rotation={[0, 0, 0]}
-                                            scale={[
-                                                cyl1ScaleX,
-                                                cyl1ScaleY,
-                                                cyl1ScaleZ,
-                                            ]}
+                                            scale={[cyl1ScaleX, cyl1ScaleY, cyl1ScaleZ]}
                                         >
-                                            <cylinderGeometry
-                                                args={[1, 1, 1, 32]}
-                                            />
-                                            <meshStandardMaterial
-                                                color={color}
-                                            />
+                                            <cylinderGeometry args={[1, 1, 1, 32]} />
+                                            <meshStandardMaterial color={color} />
                                         </mesh>
 
                                         {/* Box 1 */}
                                         <mesh
-                                            position={[
-                                                box1PosX,
-                                                0,
-                                                box1PosZ,
-                                            ]}
+                                            position={[box1PosX, 0, box1PosZ]}
                                             rotation={[0, 0, box1RotZ]}
-                                            scale={[
-                                                box1ScaleX,
-                                                box1ScaleY,
-                                                box1ScaleZ,
-                                            ]}
+                                            scale={[box1ScaleX, box1ScaleY, box1ScaleZ]}
                                         >
                                             <boxGeometry args={[1, 1, 1]} />
-                                            <meshStandardMaterial
-                                                color={color}
-                                            />
+                                            <meshStandardMaterial color={color} />
                                         </mesh>
 
                                         {/* Box 2 */}
                                         <mesh
-                                            position={[
-                                                box2PosX,
-                                                0,
-                                                box2PosZ,
-                                            ]}
-                                            rotation={[
-                                                0,
-                                                0,
-                                                box2RotZ,
-                                            ]}
-                                            scale={[
-                                                box2ScaleX,
-                                                box2ScaleY,
-                                                box2ScaleZ,
-                                            ]}
+                                            position={[box2PosX, 0, box2PosZ]}
+                                            rotation={[0, 0, box2RotZ]}
+                                            scale={[box2ScaleX, box2ScaleY, box2ScaleZ]}
                                         >
                                             <boxGeometry args={[1, 1, 1]} />
-                                            <meshStandardMaterial
-                                                color={color}
-                                            />
+                                            <meshStandardMaterial color={color} />
                                         </mesh>
 
                                         {/* Cylinder 2 */}
                                         <mesh
-                                            position={[
-                                                cyl2PosX,
-                                                0,
-                                                0,
-                                            ]}
+                                            position={[cyl2PosX, 0, 0]}
                                             rotation={[0, 0, 0]}
-                                            scale={[
-                                                cyl2ScaleX,
-                                                cyl2ScaleY,
-                                                cyl2ScaleZ,
-                                            ]}
+                                            scale={[cyl2ScaleX, cyl2ScaleY, cyl2ScaleZ]}
                                         >
-                                            <cylinderGeometry
-                                                args={[1, 1, 1, 32]}
-                                            />
-                                            <meshStandardMaterial
-                                                color={color}
-                                            />
+                                            <cylinderGeometry args={[1, 1, 1, 32]} />
+                                            <meshStandardMaterial color={color} />
                                         </mesh>
                                     </group>
                                 );
                             })()}
-
-                            {/* Optional: Axes helper for debugging orientation */}
-                            {/* <axesHelper args={[5]} /> */}
                         </Canvas>
+
                     </div>
                 </div>
 
@@ -467,21 +463,20 @@ const OrderPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* ─────────────────────────── */}
-            {/*    Recent Submissions List  */}
-            {/* ─────────────────────────── */}
-            {recentSubmissions.length > 0 && (
+            {/* ──────────────────────────────────────────────────────────── */}
+            {/*    Recent Submissions (from server via getAllOrders)       */}
+            {/* ──────────────────────────────────────────────────────────── */}
+            {orders.length > 0 && (
                 <div className="RecentSubmissions">
                     <h3>Recent Submissions</h3>
                     <ul>
-                        {recentSubmissions.map((sub, idx) => (
+                        {orders.map((sub, idx) => (
                             <li key={idx}>
                                 <strong>
                                     {sub.firstName} {sub.lastName}
                                 </strong>{' '}
-                                ({sub.email}) — {sub.widthVal} /{' '}
-                                {sub.thicknessVal} / {sub.colourVal}, Length:{' '}
-                                {sub.lengthVal}%
+                                ({sub.email}) — {sub.widthVal} / {sub.thicknessVal} /{' '}
+                                {sub.colourVal}, Length: {sub.lengthVal}%
                             </li>
                         ))}
                     </ul>
