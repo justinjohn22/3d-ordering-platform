@@ -53,7 +53,7 @@ type ThicknessOption = 'Thin' | 'Thick';
 type ColourOption = 'Black' | 'Grey' | 'Blue' | 'Red';
 
 // The base URL for our API must be provided via environment variable.
-const API_BASE = process.env.REACT_APP_API_URL;
+const API_BASE = 'https://3d-ordering-platform-backend.vercel.app';
 if (!API_BASE) {
     throw new Error('REACT_APP_API_URL is not defined in .env');
 }
@@ -409,7 +409,7 @@ const OrderPage: React.FC = () => {
                                     <group
                                         /* Rotate by 45° then shift X to approximately center */
                                         rotation={[Math.PI / 4, 0, 0]}
-                                        position={[0, 1.5, 0]}
+                                        position={[0, 2, 0]}
                                     >
                                         {/* Cylinder 1 */}
                                         <mesh
