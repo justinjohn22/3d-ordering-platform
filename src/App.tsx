@@ -1,84 +1,62 @@
-// src/App.tsx
 import React, { useState } from 'react';
 import { NavLink, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import OrderPage from './pages/OrderPage';
 import AboutPage from './pages/AboutPage';
+import './App.css';
 
 const App: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const toggleMenu = () => setMobileOpen(o => !o);
+  const closeMenu = () => mobileOpen && setMobileOpen(false);
 
-  // Toggle the mobile menu open/closed
-  const toggleMenu = () => {
-    setIsMenuOpen((prev) => !prev);
-  };
-
-  // When a link is clicked, on mobile we want to close the menu
-  const handleLinkClick = () => {
-    if (isMenuOpen) {
-      setIsMenuOpen(false);
-    }
-  };
+  const navItems = [
+    { label: 'Home', to: '/' },
+    { label: 'Order', to: '/order' },
+    { label: 'About', to: '/about' }
+  ];
 
   return (
     <div className="App">
-      {/* Top navigation bar */}
-      <nav className="NavBar container">
-        {/* Logo */}
-        <div className="NavBar-logo">FootWork Co.</div>
+      <header className="NavBar">
+        <div className="NavBar-logo">
+          <img
+            src="https://www.footwork.com.au/wp-content/uploads/2024/11/header-logo.png"
+            alt="FootWork Logo"
+          />
+        </div>
 
-        {/* Hamburger button (visible only on mobile) */}
+        <nav className={`NavBar-links ${mobileOpen ? 'mobile-open' : ''}`}>
+          {navItems.map(item => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => isActive ? 'NavLink active' : 'NavLink'}
+              onClick={closeMenu}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
         <button
-          className={`Hamburger ${isMenuOpen ? 'open' : ''}`}
+          className="ClientBtn"
+          onClick={() => window.open('https://www.footwork.com.au/client-centre-online-orders/', '_blank')}
+        >
+          Client Centre
+        </button>
+
+        <button
+          className={`Hamburger ${mobileOpen ? 'open' : ''}`}
           onClick={toggleMenu}
           aria-label="Toggle navigation menu"
         >
-          {/* Three bars */}
-          <span className="bar"></span>
-          <span className="bar"></span>
-          <span className="bar"></span>
+          <span className="bar" />
+          <span className="bar" />
+          <span className="bar" />
         </button>
+      </header>
 
-        {/* Navigation links */}
-        <ul className={`NavBar-links ${isMenuOpen ? 'mobile-open' : ''}`}>
-          <li>
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) =>
-                isActive ? 'NavLink active' : 'NavLink'
-              }
-              onClick={handleLinkClick}
-            >
-              Home
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/order"
-              className={({ isActive }) =>
-                isActive ? 'NavLink active' : 'NavLink'
-              }
-              onClick={handleLinkClick}
-            >
-              Order
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/about"
-              className={({ isActive }) =>
-                isActive ? 'NavLink active' : 'NavLink'
-              }
-              onClick={handleLinkClick}
-            >
-              About
-            </NavLink>
-          </li>
-        </ul>
-      </nav>
-
-      {/* Main content area */}
       <main className="MainContent">
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -87,7 +65,6 @@ const App: React.FC = () => {
         </Routes>
       </main>
 
-      {/* Footer */}
       <footer className="Footer">
         © {new Date().getFullYear()} FootWork Co. All rights reserved.
       </footer>

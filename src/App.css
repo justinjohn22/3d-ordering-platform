@@ -9,9 +9,9 @@
 
 :root {
   --primary-color: #007bff;
-  --text-color: #333;
-  --bg-color: #fafafa;
-  --form-bg: #ffffff;
+  --text-color: #7b7b7b;
+  --bg-color: #0f1117;
+  --form-bg: #0f1117;
   --accent-color: #007bff;
   --border-radius: 8px;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -38,8 +38,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 0;
-  background-color: #fff;
-  border-bottom: 1px solid #e4e4e4;
+  background-color: #0f1117;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -49,6 +48,7 @@ body {
   font-size: 1.5rem;
   font-weight: bold;
   color: var(--accent-color);
+  margin-left: 50px;
 }
 
 /* The navigation links: desktop by default */
@@ -102,6 +102,10 @@ body {
   transition: all 0.3s ease;
 }
 
+.ClientBtn {
+  margin-right: 50px;
+}
+
 /* When the hamburger is “open,” rotate/transform the bars */
 .Hamburger.open .bar:nth-child(1) {
   transform: translateY(9px) rotate(45deg);
@@ -126,6 +130,11 @@ body {
   /* Show the hamburger */
   .Hamburger {
     display: flex;
+    margin-right: 50px;
+  }
+
+  .ClientBtn {
+    display: none;
   }
 
   /* If mobile menu is open, show links vertical */
@@ -137,7 +146,7 @@ body {
     /* below the NavBar (nav height ~ 60px + padding) */
     right: 0;
     /* align to right edge */
-    background-color: #fff;
+    background-color: #0f1117;
     width: 200px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-radius: var(--border-radius);
@@ -166,7 +175,7 @@ body {
 
 /* —— MAIN CONTENT AREA —— */
 .MainContent {
-  padding: 2rem 0;
+  /* padding: 2rem 0; */
   min-height: calc(100vh - 160px);
   /* Account for NavBar + Footer */
 }
@@ -302,7 +311,7 @@ body {
 .InsoleLabel {
   margin-top: 0.5rem;
   font-size: 0.9rem;
-  color: #555;
+  color: #000000;
 }
 
 .InsoleCanvasContainer {
@@ -371,7 +380,6 @@ body {
   font-size: 0.95rem;
   color: #555;
 }
-
 
 .canvas-container {
   width: 100%;

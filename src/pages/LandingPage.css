@@ -1,0 +1,352 @@
+/* landigpage.css */
+:root {
+    --blue: #009ee2;
+    --dark-bg: #0f1117;
+    --text-light: #ffffff;
+    --text-mid: #d1d1d1;
+    --border-radius: 30px;
+}
+
+/* NAVBAR */
+.NavBar.dark {
+    position: sticky;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2%;
+    background: var(--dark-bg);
+    z-index: 100;
+}
+
+/* Rotating insole sprite */
+.InsoleAnim {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 420px;
+    height: 740px;
+    background-image: url('https://www.footwork.com.au/wp-content/uploads/2025/03/footworks-customer-min.png');
+    background-size: 3500% 100%;
+    background-position: 0 0;
+    animation: rotateInsole 1.4s steps(35) infinite;
+    pointer-events: none;
+}
+
+@keyframes rotateInsole {
+    to {
+        background-position: -3500% 0;
+    }
+}
+
+.NavBar-logo img {
+    height: 40px;
+}
+
+.NavBar-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.NavLink {
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.NavLink.active,
+.NavLink:hover {
+    color: var(--blue);
+    border-bottom: 2px solid var(--blue);
+    padding-bottom: 2px;
+}
+
+.ClientBtn {
+    background: var(--blue);
+    color: #fff;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.ClientBtn:hover {
+    background: #007bbf;
+}
+
+.Hamburger {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .NavBar-links {
+        display: none;
+    }
+
+    .Hamburger {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .Hamburger .bar {
+        width: 25px;
+        height: 3px;
+        background: var(--text-light);
+        transition: all 0.3s;
+    }
+
+    .Hamburger.open .bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+    }
+
+    .Hamburger.open .bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .Hamburger.open .bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+
+    .NavBar-links.mobile-open {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 70px;
+        right: 2%;
+        background: var(--dark-bg);
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* HERO */
+.Landing-hero.dark-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4rem 2%;
+    min-height: calc(100vh - 70px);
+    background: var(--dark-bg) url('https://www.footwork.com.au/wp-content/uploads/2024/11/topo-lines.png') center/cover no-repeat;
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+.Hero-content {
+    max-width: 45%;
+    color: var(--text-light);
+    position: relative;
+    z-index: 2;
+}
+
+/* slider indicator */
+.SliderIndicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-mid);
+}
+
+.SliderIndicator .divider {
+    flex: 1;
+    height: 1px;
+    background: var(--text-mid);
+}
+
+.SliderIndicator .arrow {
+    font-size: 1.2rem;
+}
+
+.Hero-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.Hero-subtitle {
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+.Hero-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    justify-content: center;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--blue);
+    color: #fff;
+    padding: 0.7rem 1.6rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-outline:hover {
+    background: var(--blue);
+}
+
+.btn-primary {
+    background: var(--blue);
+    color: #fff;
+    padding: 0.7rem 1.6rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #007bbf;
+}
+
+.DiscoverVertical {
+    position: absolute;
+    left: -4rem;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    transform-origin: left top;
+    color: var(--text-mid);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.DiscoverVertical .arrow-down {
+    font-size: 1.2rem;
+}
+
+/* IMAGE PANEL */
+.Hero-image {
+    max-width: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.ImagePanel {
+    background: #f0f8ff;
+    padding: 1rem;
+    border-radius: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.ImagePanel img {
+    max-width: 100%;
+    display: block;
+}
+
+.Blob {
+    position: absolute;
+    background: var(--blue);
+    opacity: 0.3;
+    border-radius: 50px 50px 80px 80px;
+    z-index: 1;
+}
+
+.blob-top {
+    width: 120px;
+    height: 60px;
+    top: 10%;
+    right: 5%;
+}
+
+.blob-bottom {
+    width: 180px;
+    height: 90px;
+    bottom: 10%;
+    right: 15%;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .Hero-content {
+        max-width: 55%;
+    }
+
+    .Hero-image {
+        max-width: 45%;
+    }
+
+    /* Rotating insole sprite */
+    .InsoleAnim {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 320px;
+        height: 540px;
+        background-image: url('https://www.footwork.com.au/wp-content/uploads/2025/03/footworks-customer-min.png');
+        background-size: 3500% 100%;
+        background-position: 0 0;
+        animation: rotateInsole 1.4s steps(35) infinite;
+        pointer-events: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .Landing-hero.dark-hero {
+        flex-direction: column;
+        /* padding: 2rem 5%; */
+    }
+
+    /* Rotating insole sprite */
+    .InsoleAnim {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 220px;
+        height: 440px;
+        background-image: url('https://www.footwork.com.au/wp-content/uploads/2025/03/footworks-customer-min.png');
+        background-size: 3500% 100%;
+        background-position: 0 0;
+        animation: rotateInsole 1.4s steps(35) infinite;
+        pointer-events: none;
+    }
+
+    .Hero-content {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .DiscoverVertical {
+        display: none;
+    }
+
+    .Hero-image {
+        margin-top: 2rem;
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 480px) {
+    .Hero-title {
+        font-size: 2.2rem;
+    }
+
+    .Hero-subtitle {
+        font-size: 1rem;
+    }
+
+    .Hero-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
