@@ -39,10 +39,13 @@ const LandingPage: React.FC = () => {
 
             <div className="Hero-image">
                 <div className="ImagePanel">
+                    {/* Static slide background */}
                     <img
                         src="https://www.footwork.com.au/wp-content/uploads/2025/03/slide1bg-1.webp"
                         alt="Custom Orthotic Design"
                     />
+                    {/* Rotating insole sprite */}
+                    <div className="InsoleAnim" />
                 </div>
                 <div className="Blob blob-top" />
                 <div className="Blob blob-bottom" />

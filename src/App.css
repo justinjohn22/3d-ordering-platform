@@ -130,6 +130,7 @@ body {
   /* Show the hamburger */
   .Hamburger {
     display: flex;
+    margin-right: 50px;
   }
 
   .ClientBtn {

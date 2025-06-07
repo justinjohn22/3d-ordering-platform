@@ -41,7 +41,7 @@ const App: React.FC = () => {
 
         <button
           className="ClientBtn"
-          onClick={() => window.open('/client-centre', '_blank')}
+          onClick={() => window.open('https://www.footwork.com.au/client-centre-online-orders/', '_blank')}
         >
           Client Centre
         </button>
